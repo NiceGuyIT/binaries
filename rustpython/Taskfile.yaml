@@ -109,25 +109,72 @@ tasks:
       TARGET: 'x86_64-pc-windows-gnu'
     cmds:
       - cmd: |
-          if ! command -v cargo >/dev/null; then
+          if ! command -v cross >/dev/null; then
             cargo install cross --git https://github.com/cross-rs/cross
           fi
           
-          if [[ ! -d "rustpython" ]]; then
-            git clone https://github.com/RustPython/RustPython rustpython
+          if [[ ! -d {{ quote .RUSTPYTHON_REPO }} ]]; then
+            git clone https://github.com/RustPython/RustPython {{ quote .RUSTPYTHON_REPO }}
           fi
-
-          cd rustpython
-          cross build --release --target {{.TARGET}} --features {{.FEATURES}}
+      - cmd: |
+          if [[ ! -f "{{.RUSTPYTHON_REPO}}/Lib/site.py" ]]; then
+            echo "{{.RUSTPYTHON_REPO}}/Lib/site.py doesn't exist. Did 'git clone' work?"
+          fi
+          cd {{.RUSTPYTHON_REPO}}
+          git restore -- Lib/site.py
+          patch -p1 "Lib/site.py" "../lib-site-py_nix.patch"
+      - cmd: |
+          cd {{.RUSTPYTHON_REPO}}
+          RUSTFLAGS='-C target-feature=-crt-static' cross build --release --target {{.TARGET}} --features {{.FEATURES}}
           cp target/{{.TARGET}}/release/rustpython.exe ../rustpython-{{.TARGET}}.exe
-    status:
-      - test -f ./rustpython-{{.TARGET}}
+    #status:
+    #  - test -f ./rustpython-{{.TARGET}}
 
   cross-build-linux-gnu:
     desc: Cross-compile RustPython for Linux
     vars:
       FEATURES: 'freeze-stdlib,stdlib'
       TARGET: 'x86_64-unknown-linux-gnu'
+    cmds:
+      - cmd: |
+          if ! command -v cross >/dev/null; then
+            cargo install cross --git https://github.com/cross-rs/cross
+          fi
+          
+          if [[ ! -d {{ quote .RUSTPYTHON_REPO }} ]]; then
+            git clone https://github.com/RustPython/RustPython {{ quote .RUSTPYTHON_REPO }}
+          fi
+      - cmd: |
+          if [[ ! -f "{{.RUSTPYTHON_REPO}}/Lib/site.py" ]]; then
+            echo "{{.RUSTPYTHON_REPO}}/Lib/site.py doesn't exist. Did 'git clone' work?"
+          fi
+          cd {{.RUSTPYTHON_REPO}}
+          git restore -- Lib/site.py
+          patch -p1 "Lib/site.py" "../lib-site-py_nix.patch"
+      - cmd: |
+          cd {{.RUSTPYTHON_REPO}}
+          RUSTFLAGS='-C target-feature=-crt-static' cross build --release --target {{.TARGET}} --features {{.FEATURES}}
+          cp target/{{.TARGET}}/release/rustpython ../rustpython-{{.TARGET}}
+    #status:
+    #  - test -f ./rustpython-{{.TARGET}}
+
+  cross-build-darwin-aarch64:
+    desc: Cross-compile RustPython for macOS
+    summary: |
+      This doesn't work because pkg-config uses an invalid CC parameter. '-arch' instead of '-march'
+      
+        cargo-warning=pkg-config has not been configured to support cross-compilation.
+        running: "cc" "-O3" "-ffunction-sections" "-fdata-sections" "-fPIC" "-arch" "arm64" "-I" "src/zlib" "-fvisibility=hidden" "-DSTDC" "-D_LARGEFILE64_SOURCE" "-D_POSIX_SOURCE" "-D_C99_SOURCE" "-o" "/home/drandall/projects/niceguyit/binaries/rustpython/build-rustpython/target/aarch64-apple-darwin/release/build/libz-sys-b2310fe1a459f6e1/out/lib/src/zlib/adler32.o" "-c" "src/zlib/adler32.c"
+        cargo:warning=cc:
+          error:
+            arm64: No such file or directory
+        cargo:warning=cc:
+          error: unrecognized command line option ‘-arch’; did you mean ‘-march=’?
+        exit status: 1
+
+    vars:
+      FEATURES: 'freeze-stdlib,stdlib'
+      TARGET: 'aarch64-apple-darwin'
     cmds:
       - cmd: |
           if ! command -v cross >/dev/null; then
