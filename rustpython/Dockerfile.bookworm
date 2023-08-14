@@ -1,0 +1,9 @@
+# We'll just use the official Rust image rather than build our own from scratch.
+FROM docker.io/library/rust:1.71.0-bookworm
+# Or use the cross docker image which contains the all tools needed for cross compilation.
+#FROM ghcr.io/cross-rs/x86_64-pc-windows-gnu:latest
+
+WORKDIR /rustpython
+
+# Clone the repo
+RUN git clone https://github.com/RustPython/RustPython.git .

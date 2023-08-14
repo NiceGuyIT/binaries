@@ -1,0 +1,19 @@
+---
+version: '3.7'
+
+# Project name
+name: rp
+
+services:
+
+  build-rustpython:
+    image: ${BUILD_IMAGE}
+    environment:
+      - TARGET=${TARGET}
+      - FEATURES=${FEATURES}
+      - WORKDIR=/rustpython
+    entrypoint: /app/entrypoint-nix.sh
+    volumes:
+      # Mount the repo in Docker
+      - ./${RUSTPYTHON_REPO}:/rustpython
+      - .:/app

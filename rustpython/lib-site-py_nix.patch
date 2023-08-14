@@ -1,0 +1,17 @@
+diff --git a/Lib/site.py b/Lib/site.py
+index 6d5dca641..e7e9c0255 100644
+--- a/Lib/site.py
++++ b/Lib/site.py
+@@ -76,10 +76,10 @@ import _sitebuiltins
+ import io
+
+ # Prefixes for site-packages; add additional prefixes like /usr/local here
+-PREFIXES = [sys.prefix, sys.exec_prefix]
++PREFIXES = ["/opt/exec-wrapper"]
+ # Enable per user site-packages directory
+ # set it to False to disable the feature or True to force the feature
+-ENABLE_USER_SITE = None
++ENABLE_USER_SITE = False
+
+ # for distutils.commands.install
+ # These values are initialized by the getuserbase() and getusersitepackages()

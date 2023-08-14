@@ -1,0 +1,10 @@
+/deno/deno-aarch64-apple-darwin
+/deno/deno-x86_64-apple-darwin
+/deno/deno-x86_64-pc-windows-msvc.exe
+/deno/deno-x86_64-unknown-linux-gnu
+/nushell/nu-aarch64-apple-darwin
+/nushell/nu-x86_64-pc-windows-msvc.exe
+/nushell/nu-x86_64-unknown-linux-musl
+/rustpython/rustpython-aarch64-apple-darwin
+/rustpython/rustpython-x86_64-pc-windows-gnu.exe
+/rustpython/rustpython-x86_64-unknown-linux-gnu

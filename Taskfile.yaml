@@ -1,0 +1,13 @@
+---
+version: "3"
+
+includes:
+  rustpython:
+    taskfile: rustpython/Taskfile.yaml
+    optional: true
+
+tasks:
+
+  list:
+    cmds:
+      - cmd: 'task --list'

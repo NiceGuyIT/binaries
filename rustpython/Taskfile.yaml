@@ -1,0 +1,152 @@
+---
+version: "3"
+
+vars:
+  # Other features: bz2,ssl,jit
+  # ssl,ssl-vendor: I couldn't get openssl to compile for aarch64
+  #FEATURES: 'freeze-stdlib,stdlib,ssl-vendor'
+  FEATURES: freeze-stdlib,stdlib,ssl
+
+  # Base image containing the Rust compiler, to be used to create containers for building.
+  BUILD_IMAGE: rust-builder
+
+  # Name of the RustPython repo on the host.
+  RUSTPYTHON_REPO: build-rustpython
+
+tasks:
+
+  list:
+    cmds:
+      - cmd: 'task --list'
+
+  build-rust-image:
+    desc: Build the base Rust image
+    preconditions:
+      - sh: '[ ! -z {{ quote .BUILD_IMAGE }} ]'
+        msg: BUILD_IMAGE {{ quote .BUILD_IMAGE }} is not defined.
+    cmds:
+      - cmd: |
+          docker buildx build \
+            --file Dockerfile \
+            --tag '{{.BUILD_IMAGE}}' \
+            .
+
+  build:
+    desc: Build RustPython for various architectures
+    preconditions:
+      - sh: '[ ! -z {{ quote .FEATURES }} ]'
+        msg: FEATURES {{ quote .FEATURES }} is not defined.
+      - sh: '[ ! -z {{ quote .TARGET }} ]'
+        msg: TARGET {{ quote .TARGET }} is not defined.
+      - sh: '[ ! -z {{ quote .BUILD_IMAGE }} ]'
+        msg: BUILD_IMAGE {{ quote .BUILD_IMAGE }} is not defined.
+    cmds:
+      - cmd: |
+          # vars are not passed to environmental variables
+          export RUSTPYTHON_REPO={{ quote .RUSTPYTHON_REPO }}
+          export BUILD_IMAGE={{ quote .BUILD_IMAGE }}
+          export TARGET={{ quote .TARGET }}
+          export FEATURES={{ quote .FEATURES }}
+          docker compose config
+          docker compose up
+
+  build-linux-gnu:
+    desc: Build RustPython for linux-gnu architecture
+    summary:
+      This doesn't work because it compiles with the wrong glibc version.
+    vars:
+      TARGET: 'x86_64-unknown-linux-gnu'
+      IMAGE: 'rustpython-linux-gnu'
+      BUILD_IMAGE: '{{.BUILD_IMAGE}}'
+    cmds:
+      - cmd: |
+          if ! command -v cross >/dev/null; then
+            cargo install cross --git https://github.com/cross-rs/cross
+          fi
+          
+          if [[ ! -d {{ quote .RUSTPYTHON_REPO }} ]]; then
+            git clone https://github.com/RustPython/RustPython {{ quote .RUSTPYTHON_REPO }}
+          fi
+      - cmd: |
+          if [[ ! -f "{{.RUSTPYTHON_REPO}}/Lib/site.py" ]]; then
+            echo "{{.RUSTPYTHON_REPO}}/Lib/site.py doesn't exist. Did 'git clone' work?"
+          fi
+          cd {{.RUSTPYTHON_REPO}}
+          git restore -- Lib/site.py
+          patch -p1 "Lib/site.py" "../lib-site-py_nix.patch"
+      - task: build
+        vars:
+          BUILD_IMAGE: '{{.BUILD_IMAGE}}'
+          FEATURES: '{{.FEATURES}}'
+          TARGET: '{{.TARGET}}'
+      - cmd: |
+          if [[ ! -f "{{.RUSTPYTHON_REPO}}/target/{{.TARGET}}/release/rustpython" ]]; then
+            echo "Failed to build release file."
+            ls -la "{{.RUSTPYTHON_REPO}}/target/{{.TARGET}}/release/"
+          fi
+          cp "{{.RUSTPYTHON_REPO}}/target/{{.TARGET}}/release/rustpython" "rustpython-{{.TARGET}}"
+    #status:
+    #  - test -f ./rustpython-{{.TARGET}}
+
+  build-darwin-aarch64:
+    desc: Cross-compile RustPython for Windows
+    vars:
+      TARGET: 'aarch64-apple-darwin'
+      IMAGE: 'rustpython-darwin-aarch64'
+    cmds:
+      - task: build
+        vars:
+          IMAGE: '{{.IMAGE}}'
+          FEATURES: '{{.FEATURES}}'
+          TARGET: '{{.TARGET}}'
+    status:
+      - test -f ./rustpython-{{.TARGET}}
+
+  cross-build-windows-gnu:
+    desc: Cross-compile RustPython for Windows
+    vars:
+      FEATURES: 'freeze-stdlib,stdlib'
+      TARGET: 'x86_64-pc-windows-gnu'
+    cmds:
+      - cmd: |
+          if ! command -v cargo >/dev/null; then
+            cargo install cross --git https://github.com/cross-rs/cross
+          fi
+          
+          if [[ ! -d "rustpython" ]]; then
+            git clone https://github.com/RustPython/RustPython rustpython
+          fi
+
+          cd rustpython
+          cross build --release --target {{.TARGET}} --features {{.FEATURES}}
+          cp target/{{.TARGET}}/release/rustpython.exe ../rustpython-{{.TARGET}}.exe
+    status:
+      - test -f ./rustpython-{{.TARGET}}
+
+  cross-build-linux-gnu:
+    desc: Cross-compile RustPython for Linux
+    vars:
+      FEATURES: 'freeze-stdlib,stdlib'
+      TARGET: 'x86_64-unknown-linux-gnu'
+    cmds:
+      - cmd: |
+          if ! command -v cross >/dev/null; then
+            cargo install cross --git https://github.com/cross-rs/cross
+          fi
+          
+          if [[ ! -d {{ quote .RUSTPYTHON_REPO }} ]]; then
+            git clone https://github.com/RustPython/RustPython {{ quote .RUSTPYTHON_REPO }}
+          fi
+      - cmd: |
+          if [[ ! -f "{{.RUSTPYTHON_REPO}}/Lib/site.py" ]]; then
+            echo "{{.RUSTPYTHON_REPO}}/Lib/site.py doesn't exist. Did 'git clone' work?"
+          fi
+          cd {{.RUSTPYTHON_REPO}}
+          git restore -- Lib/site.py
+          patch -p1 "Lib/site.py" "../lib-site-py_nix.patch"
+      - cmd: |
+          cd {{.RUSTPYTHON_REPO}}
+          RUSTFLAGS='-C target-feature=-crt-static' cross build --release --target {{.TARGET}} --features {{.FEATURES}}
+          cp target/{{.TARGET}}/release/rustpython ../rustpython-{{.TARGET}}
+    #status:
+    #  - test -f ./rustpython-{{.TARGET}}
