@@ -105,7 +105,6 @@ tasks:
   cross-build-windows-gnu:
     desc: Cross-compile RustPython for Windows
     vars:
-      FEATURES: 'freeze-stdlib,stdlib'
       TARGET: 'x86_64-pc-windows-gnu'
     cmds:
       - cmd: |
@@ -132,8 +131,10 @@ tasks:
 
   cross-build-linux-gnu:
     desc: Cross-compile RustPython for Linux
+    env:
+      # This doesn't work because it's for the host system in Docker, not the target system in cross.
+      OPENSSL_DIR: /usr
     vars:
-      FEATURES: 'freeze-stdlib,stdlib'
       TARGET: 'x86_64-unknown-linux-gnu'
     cmds:
       - cmd: |
@@ -153,6 +154,7 @@ tasks:
           patch -p1 "Lib/site.py" "../lib-site-py_nix.patch"
       - cmd: |
           cd {{.RUSTPYTHON_REPO}}
+          echo OPENSSL_DIR=$OPENSSL_DIR
           RUSTFLAGS='-C target-feature=-crt-static' cross build --release --target {{.TARGET}} --features {{.FEATURES}}
           cp target/{{.TARGET}}/release/rustpython ../rustpython-{{.TARGET}}
     #status:
@@ -172,7 +174,6 @@ tasks:
           error: unrecognized command line option ‘-arch’; did you mean ‘-march=’?
         exit status: 1
     vars:
-      FEATURES: 'freeze-stdlib,stdlib'
       TARGET: 'aarch64-apple-darwin'
     cmds:
       - cmd: |
