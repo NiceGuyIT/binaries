@@ -5,6 +5,9 @@ includes:
   rustpython:
     taskfile: rustpython/Taskfile.yaml
     optional: true
+  pyoxidizer:
+    taskfile: pyoxidizer/Taskfile.yaml
+    optional: true
 
 tasks:
 

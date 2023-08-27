@@ -10,6 +10,11 @@ then create a container to run the build. Mount the host volumes in the containe
 
 [mount a volume to a docker "image"]: https://stackoverflow.com/questions/26050899/how-to-mount-host-volumes-into-docker-containers-in-dockerfile-during-build
 
+## pyOxidizer
+This repo has a good example of pyOxidizer.
+
+<https://github.com/henningWoehr/action-pyoxidizer-build>
+
 ## RustPython
 
 The following change was made to restrict RustPython's library to the `exec-wrapper` directory. Also, support for

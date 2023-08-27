@@ -1,0 +1,57 @@
+---
+version: "3"
+
+tasks:
+
+  list:
+    cmds:
+      - cmd: 'task --list'
+
+  build-python:
+    desc: Build the Python distro
+    vars:
+      APP_NAME: python3
+    cmds:
+      # Download and extract
+      - cmd: |
+          pyoxidizer python-distribution-extract --download-default --verbose {{.APP_NAME}}
+          pyoxidizer list-targets {{.APP_NAME}}
+      - cmd: |
+          pyoxidizer build --release --verbose --path {{.APP_NAME}}
+
+  clean-python:
+    desc: Clean up after the build process
+    vars:
+      APP_NAME: python3
+    cmds:
+      # Download and extract
+      - cmd: |
+          rm -r ./{{.APP_NAME}}/build
+          rm -r ./{{.APP_NAME}}/python
+          rm -r ./{{.APP_NAME}}/cpython-*
+
+  get-python-config:
+    desc: Get the Python configuration
+    vars:
+      APP_NAME: python3
+    cmds:
+      - cmd: |
+          echo "python -m site"
+          python/install/bin/python3.10 -m site
+          echo
+
+          echo "python -m site --user-site"
+          python/install/bin/python3.10 -m site --user-site
+          echo
+
+          echo "python -c 'import site; print(site.getsitepackages())'"
+          python/install/bin/python3.10 -c 'import site; print(site.getsitepackages())'
+          echo
+
+          echo "python -m pip freeze"
+          python/install/bin/python3.10 -m pip freeze
+          echo
+
+          echo "python -c \"help('modules')\""
+          python/install/bin/python3.10 -c "help('modules')"
+          echo
