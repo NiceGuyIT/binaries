@@ -1,6 +1,13 @@
 ---
 version: "3"
 
+vars:
+  # Base image containing the Python distribution, to be used to create containers for building.
+  BUILD_IMAGE: python3-builder
+
+  # Name of the RustPython repo on the host.
+  RUSTPYTHON_REPO: build-rustpython
+
 tasks:
 
   list:
@@ -10,7 +17,7 @@ tasks:
   build-python:
     desc: Build the Python distro
     vars:
-      APP_NAME: python3
+      APP_NAME: .
     cmds:
       # Download and extract
       - cmd: |
@@ -37,21 +44,21 @@ tasks:
     cmds:
       - cmd: |
           echo "python -m site"
-          python/install/bin/python3.10 -m site
+          {{.APP_NAME}}/install/bin/python3.10 -m site
           echo
 
           echo "python -m site --user-site"
-          python/install/bin/python3.10 -m site --user-site
+          {{.APP_NAME}}/install/bin/python3.10 -m site --user-site
           echo
 
           echo "python -c 'import site; print(site.getsitepackages())'"
-          python/install/bin/python3.10 -c 'import site; print(site.getsitepackages())'
+          {{.APP_NAME}}/install/bin/python3.10 -c 'import site; print(site.getsitepackages())'
           echo
 
           echo "python -m pip freeze"
-          python/install/bin/python3.10 -m pip freeze
+          {{.APP_NAME}}/install/bin/python3.10 -m pip freeze
           echo
 
           echo "python -c \"help('modules')\""
-          python/install/bin/python3.10 -c "help('modules')"
+          {{.APP_NAME}}/install/bin/python3.10 -c "help('modules')"
           echo
