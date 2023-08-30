@@ -53,8 +53,12 @@ Comment this out in `~/.cargo/config`, or change the `+` to `-`.
 In order to use `pip`, RustPython needs the ssl library.
 
 ```bash
-export OPENSSL_DIR=/usr
-export OPENSSL_LIB_DIR=/usr/lib64
+OPENSSL_DIR=/usr \
+RUSTFLAGS='-C target-feature=-crt-static' \
+cargo build --release --target x86_64-unknown-linux-gnu --features "freeze-stdlib,stdlib,ssl"
+
+OPENSSL_DIR=/usr \
+RUSTFLAGS='-C target-feature=-crt-static' \
 cargo build --release --target x86_64-pc-windows-gnu --features "freeze-stdlib,stdlib,ssl"
 ```
 
