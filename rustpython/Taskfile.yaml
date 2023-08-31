@@ -63,7 +63,7 @@ tasks:
           if ! command -v cross >/dev/null; then
             cargo install cross --git https://github.com/cross-rs/cross
           fi
-          
+
           if [[ ! -d {{ quote .RUSTPYTHON_REPO }} ]]; then
             git clone https://github.com/RustPython/RustPython {{ quote .RUSTPYTHON_REPO }}
           fi
@@ -111,7 +111,7 @@ tasks:
           if ! command -v cross >/dev/null; then
             cargo install cross --git https://github.com/cross-rs/cross
           fi
-          
+
           if [[ ! -d {{ quote .RUSTPYTHON_REPO }} ]]; then
             git clone https://github.com/RustPython/RustPython {{ quote .RUSTPYTHON_REPO }}
           fi
@@ -164,7 +164,7 @@ tasks:
     desc: Cross-compile RustPython for macOS
     summary: |
       This doesn't work because pkg-config uses an invalid CC parameter. '-arch' instead of '-march'
-      
+
         cargo-warning=pkg-config has not been configured to support cross-compilation.
         running: "cc" "-O3" "-ffunction-sections" "-fdata-sections" "-fPIC" "-arch" "arm64" "-I" "src/zlib" "-fvisibility=hidden" "-DSTDC" "-D_LARGEFILE64_SOURCE" "-D_POSIX_SOURCE" "-D_C99_SOURCE" "-o" "/home/drandall/projects/niceguyit/binaries/rustpython/build-rustpython/target/aarch64-apple-darwin/release/build/libz-sys-b2310fe1a459f6e1/out/lib/src/zlib/adler32.o" "-c" "src/zlib/adler32.c"
         cargo:warning=cc:
@@ -180,7 +180,7 @@ tasks:
           if ! command -v cross >/dev/null; then
             cargo install cross --git https://github.com/cross-rs/cross
           fi
-          
+
           if [[ ! -d {{ quote .RUSTPYTHON_REPO }} ]]; then
             git clone https://github.com/RustPython/RustPython {{ quote .RUSTPYTHON_REPO }}
           fi

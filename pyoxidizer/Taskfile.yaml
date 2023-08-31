@@ -1,7 +1,29 @@
 ---
 version: "3"
 
+env:
+  # Application and project name
+  APP_NAME: oxpython3
+
+  # PyOxidizer version
+  PYOXIDIZER_VERSION: '{{.PYOXIDIZER_VERSION | default "0.24.0" }}'
+
+  # Image name
+  IMAGE_NAME: '{{.IMAGE_NAME | default "build-stage" }}'
+
+  # Container name. Same as image name
+  CONTAINER_NAME: '{{.CONTAINER_NAME | default "build-stage" }}'
+
+  # Build target
+  # TARGET: 'aarch64-apple-darwin'
+  TARGET: 'x86_64-unknown-linux-musl'
+  # TARGET: 'x86_64-pc-windows-gnu'
+
 vars:
+  COMPOSE_FILE: '{{.COMPOSE_FILE | default "docker-compose.yaml" }}'
+  PROJECT_NAME: '{{.PROJECT_NAME | default "oxpython3" }}'
+  SERVICE_NAME: '{{.SERVICE_NAME | default "build-stage" }}'
+
   # Base image containing the Python distribution, to be used to create containers for building.
   BUILD_IMAGE: python3-builder
 
@@ -13,6 +35,50 @@ tasks:
   list:
     cmds:
       - cmd: 'task --list'
+
+  build-python-docker:
+    desc: Build the Python distro using Docker
+    preconditions:
+      - sh: 'docker buildx version'
+        msg: 'Cannot find the "docker" executable or the "docker buildx" plugin. Is Docker installed and running?'
+    cmds:
+      # Download and extract
+      - cmd: |
+          docker buildx build \
+            --progress=plain \
+            --file Dockerfile \
+            --tag "${APP_NAME}-${IMAGE_NAME}" \
+            --build-arg "TARGET=${TARGET}" \
+            --build-arg "PYOXIDIZER_VERSION=${PYOXIDIZER_VERSION}" \
+          .
+      # - cmd: |
+      #     docker compose \
+      #       --project-name '{{.PROJECT_NAME}}' \
+      #       --file '{{.COMPOSE_FILE}}' \
+      #       run --interactive \
+      #       '{{.SERVICE_NAME}}'
+
+  start-app:
+    desc: Start the container to build the app
+    preconditions:
+      #- sh: 'docker compose version'
+      #  msg: 'Cannot find the "docker" executable or the "docker compose" plugin. Is Docker installed and running?'
+      - sh: 'docker buildx version'
+        msg: 'Cannot find the "docker" executable or the "docker buildx" plugin. Is Docker installed and running?'
+    cmds:
+      - cmd: |
+          docker compose --file '{{.COMPOSE_FILE}}' up '{{.SERVICE_NAME}}' --detach
+
+  stop-app:
+    desc: Stop the container for building the app
+    # preconditions:
+      # - sh: 'docker compose version'
+      #   msg: 'Cannot find the "docker" executable or the "docker compose" plugin. Is Docker installed and running?'
+      # - sh: 'docker buildx version'
+      #   msg: 'Cannot find the "docker" executable or the "docker buildx" plugin. Is Docker installed and running?'
+    cmds:
+      - cmd: |
+          docker compose --file '{{.COMPOSE_FILE}}' down
 
   build-python:
     desc: Build the Python distro

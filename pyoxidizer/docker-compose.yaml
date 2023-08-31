@@ -2,18 +2,20 @@
 version: '3.7'
 
 # Project name
-name: oxpython3
+name: ${APP_NAME}
 
 services:
 
-  build-rustpython:
-    image: ${BUILD_IMAGE}
+  build-stage:
+    image: ${APP_NAME}-${IMAGE_NAME}
+    container_name: ${APP_NAME}-${CONTAINER_NAME}
     environment:
       - TARGET=${TARGET}
-      - FEATURES=${FEATURES}
-      - WORKDIR=/rustpython
-    entrypoint: /app/entrypoint-nix.sh
+      - PYOXIDIZER_VERSION=${PYOXIDIZER_VERSION}
+      - WORKDIR=/app
+    stdin_open: true    # docker run -i
+    tty: true           # docker run -t
+    # entrypoint: /app/entrypoint-nix.sh
+    # entrypoint: /bin/bash
     volumes:
-      # Mount the repo in Docker
-      - ./${RUSTPYTHON_REPO}:/rustpython
       - .:/app
